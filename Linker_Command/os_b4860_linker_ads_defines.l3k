@@ -1,0 +1,42 @@
+// b4860 DDR memory map:
+// +---------------+ 0x0000_0000
+// |    PA Only    |
+// |    PA r/w     |
+// .    SC -/-     .
+// +---------------+ _DDR0_b = 0x0_8000_0000 
+// |    SC Only    |
+// |    PA r/-     | (at boot time, PA r/w)
+// |    SC r/w     |
+// +===============+ __SHARED_CTRL_b
+// |               |
+// |    Control    | } Non-cacheable in SmartDSP OS
+// |               |
+// +===============+ 
+
+// SC owned memory allocator, cacheable in SmartDSP OS will reside on PA side
+// PA owned memory allocator, cacheable in SmartDSP OS will reside on PA side
+
+// physical memory on board
+
+ // Shared control memory. Non-cacheable in SmartDSP OS
+ __SHARED_CTRL_b    = 0x17FF00000;	// Shared Control base address, don't change it if you run with Linux
+ __SHARED_CTRL_size = 0x100000;
+
+ _DDR0_b    = 0x100000000;			     // beginning of DDR memory
+ _DDR0_size = __SHARED_CTRL_b - _DDR0_b; // depends on board (~2Gb on QDS)
+ _DDR0_e    = __SHARED_CTRL_b - 1;
+ 
+ _M3_b    = 0xC40000000;			// beginning of M3 memory
+ _M3_size = 0x00040000;		        // options: 512KByte or 256KB or 64KB
+ _M3_e    = (_M3_b + _M3_size - 1);
+ 
+ #if (_ENABLE_TB == 1)
+ _TRACE_BUFFER_size = 0x20000;
+ #else
+ _TRACE_BUFFER_size = 0;
+#endif
+  
+ ASSERT ((__SHARED_CTRL_size <= (0x80000000 - _DDR0_size)),"__SHARED_CTRL_size or _DDR0_size MUST be smaller "); 
+ ASSERT ((__SHARED_CTRL_size >= 0x1000),"__SHARED_CTRL_size MUST be at least 0x1000 "); 
+
+ 

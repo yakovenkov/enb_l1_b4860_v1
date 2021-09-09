@@ -1,0 +1,118 @@
+#ifndef USING_USER_KA_STACK
+#define USING_USER_KA_STACK 0
+#endif
+
+#ifndef USING_RTLIB
+#define USING_RTLIB 0
+#endif
+
+#if (USING_RTLIB == 1)
+__rtlibHeapSize = 0x8000;
+__TopOfHeap     = _VirtLocalDataDDR0_e;
+__BottomOfHeap  = __TopOfHeap - __rtlibHeapSize;
+#else
+__rtlibHeapSize = 0;
+#endif
+
+reserved_size = __rtlibHeapSize;
+
+
+// Enable CPP exceptions handling
+ENABLE_EXCEPTION = 1;
+
+// Local Memory
+// Put all the local memory segments to "local_data" 
+
+physical_memory private  ( * ) {
+	LOCAL_DDR0:     org = _PhysLocalDataDDR0_b,     len = _LocalDataDDR0_size;
+    LOCAL_M3: 	    org = _PhysLocalDataM3_b,       len = _LocalDataM3_size;       
+}
+
+
+unit private (*) {
+
+	MEMORY {
+		local_data_cacheable_descriptor        ("rw"): org = _VirtLocalDataDDR0_b;
+        local_data_ddr0_cacheable_descriptor   ("rw"): AFTER(local_data_cacheable_descriptor) ;
+        local_data_ddr0_nocacheable_descriptor ("rw"): AFTER(local_data_ddr0_cacheable_descriptor) ;
+		local_data_m3_cacheable_descriptor     ("rw"): org = _VirtLocalDataM3_b;
+        local_data_m3_nocacheable_descriptor   ("rw"): AFTER(local_data_m3_cacheable_descriptor) ;
+        os_system_stack_descriptor             ("rw"): org = _ARCH_SYS_STACK_VIRT_BASE;
+        os_background_stack_descriptor         ("rw"): org = _ARCH_BCK_STACK_VIRT_BASE;
+	}  
+    SECTIONS {
+        descriptor_local_data_cacheable {
+             .oskernel_local_data
+             .data
+              ramsp_0
+             .oskernel_rom
+             .rom
+             .exception
+             .exception_index
+             .ramsp_0
+             ".c?_bss_sections_table"            
+             .init_table
+             .rom_init
+             .rom_init_tables
+             .staticinit
+             . = align(0x8);
+             LNK_SECTION(att_mmu, "rw", 0x400, 8, ".att_mmu");
+             .bsstab
+             reserved_crt_tls
+             .oskernel_local_data_bss
+             .bss
+        } > local_data_cacheable_descriptor;
+
+        descriptor_local_data_ddr0_cacheable {
+             .local_data_ddr0_cacheable
+             .local_data_ddr0_cacheable_bss
+        } > local_data_ddr0_cacheable_descriptor;
+              
+        descriptor_local_data_ddr0_nocacheable {
+             .local_data_ddr0_nocacheable
+             .local_data_ddr0_nocacheable_bss
+        } > local_data_ddr0_nocacheable_descriptor;
+
+        descriptor_local_data_m3_cacheable {
+             .local_data_m3_cacheable
+             .local_data_m3_cacheable_bss
+        } > local_data_m3_cacheable_descriptor;
+              
+        descriptor_local_data_m3_nocacheable {
+             .local_data_m3_nocacheable
+             .local_data_m3_nocacheable_bss
+        } > local_data_m3_nocacheable_descriptor;
+        
+        descriptor_os_system_stack {
+             .os_system_stack
+        } > os_system_stack_descriptor;
+            
+        descriptor_os_background_stack {
+             .os_background_stack
+        } > os_background_stack_descriptor;
+
+    }
+}
+
+
+address_translation (*) {
+    local_data_cacheable_descriptor        	(SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH): LOCAL_DDR0, org = _PhysLocalDataDDR0_b;
+    local_data_ddr0_cacheable_descriptor   	(SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH): LOCAL_DDR0, AFTER(local_data_cacheable_descriptor);
+    local_data_ddr0_nocacheable_descriptor 	(LOCAL_DATA_MMU_DEF_LOW, LOCAL_DATA_MMU_DEF_HIGH)  : LOCAL_DDR0, AFTER(local_data_ddr0_cacheable_descriptor);
+    os_system_stack_descriptor             	(STACK_DATA_MMU_DEF_LOW, STACK_DATA_MMU_DEF_HIGH)  : LOCAL_DDR0, AFTER(local_data_ddr0_nocacheable_descriptor) descriptor(2);
+    os_background_stack_descriptor         	(STACK_DATA_MMU_DEF_LOW, STACK_DATA_MMU_DEF_HIGH)  : LOCAL_DDR0, AFTER(os_system_stack_descriptor) descriptor(3);    
+    local_data_m3_cacheable_descriptor  	(SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH): LOCAL_M3,   org = _PhysLocalDataM3_b;
+    local_data_m3_nocacheable_descriptor   	(LOCAL_DATA_MMU_DEF_LOW, LOCAL_DATA_MMU_DEF_HIGH)  : LOCAL_M3,   AFTER(local_data_m3_cacheable_descriptor);
+    
+	reserve (GUARDED_DATA_MMU_DEF_LOW, GUARDED_DATA_MMU_DEF_HIGH): _CCSR_phys_b, _CCSR_virt_b, _CCSR_size , "rw" ;
+#if  ( (USING_RTLIB == 1) )
+    reserve (SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH): _PhysLocalDataDDR0_e - reserved_size, _VirtLocalDataDDR0_e - reserved_size, reserved_size, "rw";
+#endif     
+}
+
+// Enable CPP symbols
+_cpp_staticinit_start     = originof(".staticinit");
+_cpp_staticinit_end       = endof(".staticinit");
+__exception_table_start__ = (ENABLE_EXCEPTION) ? originof(".exception_index"):0;
+__exception_table_end__   = (ENABLE_EXCEPTION) ? endof(".exception_index"):0; 
+

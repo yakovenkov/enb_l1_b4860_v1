@@ -1,0 +1,58 @@
+OVERVIEW
+
+This is quite simple but almost working LTE L1 implementation for the famous NXP's B4860 SoC.
+
+It successfully runs on top of B4860QDS board and other B4860-based modules via commercial RRU
+connected via CPRI link.
+
+Currently this L1 supports only a subset of LTE RAN features:
+  - FDD 3MHz and FDD 5MHz modes
+  - SISO and [almost untested] 2T2R configurations
+
+BUILD
+
+Build requirements:
+
+1. Freescale CodeWarrior for StarCore SC3900 (version 10.9.0 build 451)
+
+2. Board-dependent initialization files:
+
+     b486x_all_heap.c
+     b486x_default_stacks.c
+     b486x_init.c
+     b486x_shared_mem.c
+     smartdsp_init.c
+
+   Create and put them to os_config/ dir.
+
+Build process:
+
+1. Apply patch (smartdsp_os.diff) to SmartDSP OS sources to get all the things working as expected.
+
+2. Create B4860 workspace and import CW project into it. It has already configured build targets:
+
+     Debug - full debugging without optimization
+     Release - full optimization without debug code
+     Release_Export - Release + prepare unique .bin firmware image based on GIT ref
+
+   You can use following defines to customize code a bit:
+
+     USE_DIRECT_LOG=1 use direct logging to PPC side (eliminates snprintf overhead on SC3900 side)
+     USE_CPRI=<0..7> use CPRI number at initialization (default 0)
+     DEBUG_BUILD=1 enable debug features
+     DEBUG_OPT_OFF=1 disable optimization for debugging
+
+3. Take a bottle of beer and try to build.
+
+4. Don't forget to build PowerPC part of the software (FAPI/IPC libs and some other B4860 utils).
+
+FOOTNOTES
+
+Please see LICENSE file for the terms of licensing and usage.
+Note, this code includes some codelines from other open-source projects, adopted to B4860, please 
+see headers in source files.
+
+Feel free to contact me if you have any questions or suggestions.
+
+-- 
+Valentin Yakovenkov <yakovenkov@gmail.com>

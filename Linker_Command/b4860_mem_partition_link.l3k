@@ -1,0 +1,88 @@
+// This file defines memory map of application.
+//---------------------------------------
+// ---------- DDR partitioning ---------- 
+//---------------------------------------
+// --------------  --> _SharedDDR0_b
+// |             |
+// | Shared DDR  |
+// |             |
+// ---------------  --> _LocalDataDDR0_b
+// | Local DDR   |
+// |   Core 0    |
+// ---------------
+// | Local DDR   |
+// |   Core 1    |
+// --------------- --> _PhysLocalDataDDR0_b Core 2
+// | Local DDR   |
+// |   Core 2    |
+// ---------------
+// | Local DDR   |
+// |   Core 3    |
+// ---------------
+// | Local DDR   |
+// |   Core 4    |
+// ---------------
+// | Local DDR   |
+// |   Core 5    |
+// ---------------
+
+
+////////////// Local memory sizes definitions ///////////////////
+
+ _LocalDataDDR0_size     = 0x08000000; 
+ _LocalDataM3_size       = 0x00002000; 
+ 
+ 
+////////////// DDR Memories definitions ///////////////////
+
+// The begining of physical shared memory of all cores 
+ _SharedDDR0_b    = _DDR0_b;
+ _SharedDDR0_size = (_DDR0_size - (_LocalDataDDR0_size * num_core() + _TRACE_BUFFER_size));
+ _SharedDDR0_e    = _SharedDDR0_b + _SharedDDR0_size - 1;
+
+ _SharedM3_b    = _LocalDataM3_b + (_LocalDataM3_size * num_core());
+ _SharedM3_size = (_M3_e - _SharedM3_b) + 1;
+ _SharedM3_e    = _SharedM3_b + _SharedM3_size - 1;
+ 
+ ////
+ _SharedTB_b = _SharedDDR0_e + 1;
+ _SharedTB_e = _SharedTB_b + _TRACE_BUFFER_size -1;
+ 
+ // The begining of physical local memory of all cores
+ _LocalDataDDR0_b   = _SharedTB_e + 1;
+ _LocalDataM3_b     = _M3_b;
+
+// Virtual local and shared memory definitions (the same for all cores) 
+ _VirtSharedDDR0_b  =  0x80000000;
+ _VirtSharedDDR0_e  = _VirtSharedDDR0_b + _SharedDDR0_size - 1;
+
+////
+ _VirtSharedTB_b = _VirtSharedDDR0_e + 1;
+ _VirtSharedTB_e = _VirtSharedTB_b + _TRACE_BUFFER_size -1;
+ 
+////
+ _VirtLocalDataDDR0_b = _VirtSharedTB_e + 1; // Set here the start of virtual address for DSP DDR0
+ _VirtLocalDataDDR0_e = (_VirtLocalDataDDR0_b + _LocalDataDDR0_size);
+  
+ 
+ _VirtLocalDataM3_b = 0x7D000000; // Set here the start of virtual address for DSP M3
+ _VirtLocalDataM3_e = (_VirtLocalDataM3_b + _LocalDataM3_size);
+ 
+ _VirtSharedM3_b    = _VirtLocalDataM3_b + (_LocalDataM3_size * num_core());
+ _VirtSharedM3_e    = _VirtSharedM3_b + _SharedM3_size - 1;
+   
+ __Virt_PA_HetShared_b = 0x60000000; // Virtual address reserved for PA heterogeneous shared heap
+ __Virt_SC_HetShared_b = 0x6c000000; // Virtual address reserved for SC heterogeneous shared heap
+ 
+ __VirtSHARED_CTRL_b   = 0xfff00000;
+ __VirtSHARED_CTRL_e   = __VirtSHARED_CTRL_b + __SHARED_CTRL_size - 1;
+  
+// Physical local memory definitions of the current core
+ _PhysLocalDataDDR0_b = _LocalDataDDR0_b + (_LocalDataDDR0_size * core_id());
+ _PhysLocalDataDDR0_e = _PhysLocalDataDDR0_b + _LocalDataDDR0_size;
+ 
+ _PhysLocalDataM3_b = _LocalDataM3_b + (_LocalDataM3_size * core_id());
+ _PhysLocalDataM3_e = _PhysLocalDataM3_b + _LocalDataM3_size;
+ 
+  ASSERT ((_VirtLocalDataM3_b < _VirtLocalDataDDR0_b),"Set _VirtLocalDataM3_b different virtual address "); 
+ 

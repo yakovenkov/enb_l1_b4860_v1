@@ -1,0 +1,145 @@
+/* Definitions */
+
+/* Set to 1 for fprintf() and compiler defined malloc support */
+#define USING_RTLIB         1
+/* Set to 1 if USER_KERNEL_AWARENESS_STACK is set to 1 in os_config.h */
+#define USING_USER_KA_STACK 0   
+
+#ifndef _ENABLE_TB
+#define _ENABLE_TB 1
+#endif
+
+#if (_ENABLE_TB == 1)
+_TRACE_BUFFER_start =   _SharedTB_b;
+_TRACE_BUFFER_end =  _SharedTB_e;
+#endif
+
+tb_reserved_size = _TRACE_BUFFER_size;
+
+arch(b4860);
+number_of_cores(6);
+
+
+
+_ID_CORE = core_id();
+
+entry ("___crt0_start");
+
+// General defines that should not be changed when porting
+// Include MMU defines for SC3900
+#include "sc39xx_mmu_link_defines.l3k"
+
+// Application specific defines
+#include "sc39xx_mmu_link_app.l3k"
+
+// Include memory ranges defines for B4860
+#include "os_b4860_link_defines.l3k"
+
+// Include memory ranges defines for ADS (DDR0)
+#include "os_b4860_linker_ads_defines_4g.l3k"
+
+// Include memory map for application defines
+#include "b4860_mem_partition_link.l3k"
+
+
+// SHARED MEMORY SPACE
+
+physical_memory shared  ( * ) {
+	SHARED_DDR0:     org = _SharedDDR0_b,     len = _SharedDDR0_size;
+	CCSR: 	         org = _CCSR_phys_b,  	  len = _CCSR_size;
+	SHARED_CTRL:	 org = __SHARED_CTRL_b,   len = __SHARED_CTRL_size;	
+ 	SHARED_M3:       org = _SharedM3_b,       len = _SharedM3_size;  
+#if (_ENABLE_TB == 1)
+ 	SHARED_TB:		 org = _SharedTB_b,  len = tb_reserved_size;
+#endif 			
+}
+
+
+unit shared (*) {
+	KEEP ( _interr_vector_file );
+	MEMORY {
+    	os_shared_data_cacheable_descriptor      ("rw"): org =_VirtSharedDDR0_b;
+    	os_shared_data_noncacheable_descriptor	 ("rw"): AFTER(os_shared_data_cacheable_descriptor);
+        shared_data_ddr0_noncacheable_descriptor ("rw"): AFTER(os_shared_data_noncacheable_descriptor);
+        shared_data_ddr0_cacheable_descriptor	 ("rw"): AFTER(shared_data_ddr0_noncacheable_descriptor); 
+        os_kernel_text_cacheable_descriptor      ("rx"): AFTER(shared_data_ddr0_cacheable_descriptor);        
+        shared_data_m3_noncacheable_descriptor   ("rw"): org =_VirtSharedM3_b;
+        shared_data_m3_cacheable_descriptor		 ("rw"): AFTER(shared_data_m3_noncacheable_descriptor);
+	}
+	
+    SECTIONS {
+        descriptor_os_shared_data_cacheable {
+            .os_shared_data_cacheable
+            reserved_crt_mutex
+            .os_shared_data_cacheable_bss
+        } > os_shared_data_cacheable_descriptor;
+                
+        descriptor_os_shared_data_noncacheable {
+            .os_shared_noncacheable
+            .os_shared_noncacheable_bss
+        } > os_shared_data_noncacheable_descriptor;        
+                
+        descriptor_shared_data_ddr0_noncacheable {
+            .shared_data_ddr0_noncacheable
+            .shared_data_ddr0_noncacheable_bss
+        } > shared_data_ddr0_noncacheable_descriptor;
+        
+        descriptor_shared_data_ddr0_cacheable	{
+            .c0c1c2c3c4c5_bss_sections_table       
+            .shared_data_ddr0_cacheable
+            .shared_data_ddr0_cacheable_bss
+            .log_event_ddr1
+        } > shared_data_ddr0_cacheable_descriptor;
+        
+        descriptor_shared_data_m3_noncacheable {
+            .shared_data_m3_noncacheable
+            .shared_data_m3_noncacheable_bss
+        } > shared_data_m3_noncacheable_descriptor;
+        
+        descriptor_shared_data_m3_cacheable	{       
+            .shared_data_m3_cacheable
+            .shared_data_m3_cacheable_bss
+        } > shared_data_m3_cacheable_descriptor;
+    	
+    	descriptor_os_kernel_text_cacheable {
+    		.osvecb
+    		.oskernel_text_run_time
+    		.oskernel_text_run_time_critical
+    		.oskernel_text_initialization
+			.unlikely
+    		.text
+    		.private_load_text
+    		.default
+    		.intvec
+    	} > os_kernel_text_cacheable_descriptor;
+        
+    }
+}
+
+address_translation (*) {
+    os_shared_data_cacheable_descriptor      (SHARED_DATA_MMU_DEF_LOW, SHARED_DATA_MMU_DEF_HIGH): SHARED_DDR0;
+    os_shared_data_noncacheable_descriptor   (SHARED_NON_CACHEABLE_DATA_MMU_DEF_LOW, SHARED_NON_CACHEABLE_DATA_MMU_DEF_HIGH): SHARED_DDR0;
+    shared_data_ddr0_noncacheable_descriptor (SHARED_NON_CACHEABLE_DATA_MMU_DEF_LOW, SHARED_NON_CACHEABLE_DATA_MMU_DEF_HIGH): SHARED_DDR0;
+    shared_data_ddr0_cacheable_descriptor 	 (SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH): SHARED_DDR0;
+    os_kernel_text_cacheable_descriptor      (SYSTEM_PROG_MMU_DEF_LOW, SYSTEM_PROG_MMU_DEF_HIGH): SHARED_DDR0;   
+    reserve   (SHARED_NON_CACHEABLE_DATA_MMU_DEF_LOW, SHARED_NON_CACHEABLE_DATA_MMU_DEF_HIGH): __SHARED_CTRL_b, __VirtSHARED_CTRL_b, __SHARED_CTRL_size, "rw";
+#if  ( (_ENABLE_TB == 1) )
+    reserve (SYSTEM_DATA_MMU_DEF_LOW, SYSTEM_DATA_MMU_DEF_HIGH):_TRACE_BUFFER_start ,_VirtSharedTB_b , tb_reserved_size, "rw";
+#endif                     
+	shared_data_m3_noncacheable_descriptor	 (SHARED_NON_CACHEABLE_DATA_MMU_DEF_LOW, SHARED_NON_CACHEABLE_DATA_MMU_DEF_HIGH): SHARED_M3, org = _SharedM3_b ; 
+    shared_data_m3_cacheable_descriptor    	 (SYSTEM_DATA_MMU_DEF_LOW,SYSTEM_DATA_MMU_DEF_HIGH): SHARED_M3, AFTER(shared_data_m3_noncacheable_descriptor); 
+}
+
+tasks 
+{
+c0: task0_c0, 0,0,0;
+c1: task0_c1, 0,0,0;
+c2: task0_c2, 0,0,0;
+c3: task0_c3, 0,0,0;
+c4: task0_c4, 0,0,0;
+c5: task0_c5, 0,0,0;
+}
+
+
+#include "b4860_local_map_link.l3k"
+

@@ -1,0 +1,64 @@
+
+	/*******************************************************************************************/
+	/* The user should use the low and high attributes to build the 64 bit attribute 		   */
+	/* For example: ((SHARED_DATA_MMU_DEF_HIGH << 32) | SHARED_DATA_MMU_DEF_LOW)			   */
+	/*******************************************************************************************/
+
+    SYSTEM_PROG_MMU_DEF_LOW     =  MMU_PROG_DEF_XPERM_SUPER  |
+                                   MMU_PROG_CACHEABLE_REGION |
+                                   MMU_PROG_PREFETCH_ON_MISS ;
+
+    SYSTEM_PROG_MMU_DEF_HIGH     = 0x00000000;
+    
+    
+    SYSTEM_DATA_MMU_DEF_LOW     =  MMU_DATA_DEF_WPERM_SUPER  |
+                                   MMU_DATA_DEF_RPERM_SUPER  | 
+                                   MMU_DATA_CACHEABLE_REGION |
+                                   MMU_DATA_PREFETCH_ON_MISS ;
+
+    SYSTEM_DATA_MMU_DEF_HIGH     = MMU_DATA_COHERENT;
+
+    
+    SYSTEM_ROM_MMU_DEF_LOW       = MMU_DATA_DEF_RPERM_SUPER  | 
+                                   MMU_DATA_CACHEABLE_REGION |
+                                   MMU_DATA_PREFETCH_ON_MISS ;
+
+    SYSTEM_ROM_MMU_DEF_HIGH      = 0x00000000;
+    
+    LOCAL_DATA_MMU_DEF_LOW       = MMU_DATA_DEF_WPERM_SUPER  | 
+                                   MMU_DATA_DEF_RPERM_SUPER ;
+
+    LOCAL_DATA_MMU_DEF_HIGH      = 0x00000000;
+
+
+    SHARED_DATA_MMU_DEF_LOW      = MMU_DATA_DEF_WPERM_SUPER |
+								   MMU_DATA_CACHEABLE_REGION|
+    							   MMU_DATA_DEF_RPERM_SUPER |
+    							   MMU_DATA_PREFETCH_ON_MISS ;
+    							    
+    SHARED_DATA_MMU_DEF_HIGH     = MMU_DATA_COHERENT ;
+    
+    SHARED_NON_CACHEABLE_DATA_MMU_DEF_LOW      = MMU_DATA_DEF_WPERM_SUPER |								   
+    							                 MMU_DATA_DEF_RPERM_SUPER ;
+    							    
+    SHARED_NON_CACHEABLE_DATA_MMU_DEF_HIGH     = 0x00000000 ;
+    
+    REV1_SHARED_DATA_MMU_DEF_LOW   = MMU_DATA_DEF_WPERM_SUPER |
+       							     MMU_DATA_DEF_RPERM_SUPER ;
+     							    
+    REV1_SHARED_DATA_MMU_DEF_HIGH  = MMU_DATA_COHERENT ;
+    
+    
+    STACK_DATA_MMU_DEF_LOW       = SYSTEM_DATA_MMU_DEF_LOW  ;
+    STACK_DATA_MMU_DEF_HIGH      = MMU_DATA_STACK_ENABLE;
+    
+    SCRATCHPAD_DATA_MMU_DEF_LOW  = STACK_DATA_MMU_DEF_LOW  ;
+    SCRATCHPAD_DATA_MMU_DEF_HIGH = 0x00000000 ;
+    
+    GUARDED_DATA_MMU_DEF_LOW     = (MMU_DATA_DEF_WPERM_SUPER  | MMU_DATA_DEF_RPERM_SUPER) ;
+	GUARDED_DATA_MMU_DEF_HIGH    = (MMU_DATA_PERIPHERAL | MMU_DATA_GUARDED);
+    
+    
+    MMU_DATA_DEF_SHARED_DID		 = 0x00000000;                
+    MMU_PROG_DEF_SHARED_PID		 = 0x00000000;                
+ 

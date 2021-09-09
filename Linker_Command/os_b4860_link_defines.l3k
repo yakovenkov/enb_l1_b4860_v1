@@ -1,0 +1,35 @@
+
+//
+// Define configuration specific values 
+//*****KEEP IN SYNC WITH sc39xx_macros.h*********//
+//
+
+       _SR_Setting = 0x0000000C;    // The value to set the SR after reset:
+                                    //  - Dual 16-bit, no saturation
+                                    //  - No scaling
+                                    //  - Twos-complement rounding
+                                    //  - 32-bit Arithmetic Saturation enabled
+                                    
+                                    
+       
+       _SR2_Setting = 0x015f0041;   // The value to set the SR2 after reset:
+                                    //  - Interrupts disabled
+                                    //  - Interrupt level 31
+                                    //  - Exception Mode
+                                    //  - ESP is the stack pointer
+
+////////////// Local memory definitions for start up file //////
+
+
+// In sync with sc39xx_macros.h - Must be used to virtually map StackStart
+ _ARCH_SYS_STACK_VIRT_BASE  = 0x7B400000;
+ _ARCH_BCK_STACK_VIRT_BASE  = 0x7BC00000;
+ _LNK_MMU_SYS_STACK_MATT = 2;
+ _LNK_MMU_TASK_STACK_MATT = 3;
+ 
+ _CCSR_virt_b   = 0x7F000000; // Must be the same as DSP_CCSR_REGS_DEFAULT at smartdsps_os_device.h
+ _CCSR_phys_b   = 0xFFE000000;
+ _CCSR_size     = 0x1000000;
+ 
+ASSERT (((_CCSR_virt_b < 0x80000000) && (_ARCH_SYS_STACK_VIRT_BASE < 0x80000000) && (_ARCH_BCK_STACK_VIRT_BASE < 0x80000000)),"Can't use virtual addresses which conflict with DDR 0x8000_0000 - 0xffff_ffff "); 
+ 

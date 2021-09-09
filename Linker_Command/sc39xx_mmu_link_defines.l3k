@@ -1,0 +1,84 @@
+/**************************************************************************//**
+ @Description   MMU Program Register A Bits
+ 
+                These bits are used for setting the attributes of 
+                Program MMU segments
+*//***************************************************************************/
+ MMU_PROG_DEF_XPERM_SUPER      	    = 0x00000004;
+/**< Fetch Permission For Program Accesses in Supervisor Level */
+ MMU_PROG_DEF_XPERM_USER       	    = 0x00000010;
+/**< Fetch Permission For Program Accesses in User Level */
+ MMU_PROG_CACHEABLE_REGION       	= 0x00000020;
+/**< Segment is Cacheable in the ICache and L2 Cache */
+ MMU_PROG_NO_PREFETCH            	= 0x00000000; 
+/**< No prefetch on segment */
+ MMU_PROG_PREFETCH_ON_MISS       	= 0x00000080;
+/**< Prefetch after a cache miss on segment */
+ MMU_PROG_PREFETCH_ANY           	= 0x00000100;
+/**< Prefetch after a cache miss/hit on segment */
+ MMU_PROG_FLEX_SEGMENT_MODEL     	= 0x00000400;
+/**< Indicates that the segment uses Flexible Segment Model - should not be set 
+     manually in the linker file */ 
+
+/**************************************************************************//**
+ @Description   MMU Program Register C Bits
+ 
+                These bits are used for setting the attributes of 
+                Program MMU segments
+*//***************************************************************************/
+ MMU_PROG_L2_PARTID_0				= 0x00000000;
+ MMU_PROG_L2_PARTID_1				= 0x00100000;
+ MMU_PROG_L2_PARTID_2				= 0x00200000;
+ MMU_PROG_L2_PARTID_3				= 0x00300000;
+ MMU_PROG_COHERENT					= 0x00010000;
+
+/**************************************************************************//**
+ @Description   MMU Data Register A Bits
+ 
+                These bits are used for setting the attributes of 
+                Data MMU segments
+*//***************************************************************************/
+ MMU_DATA_DEF_WPERM_SUPER       	= 0x00000002;
+/**< Write Permission For Data Accesses in Supervisor Level */
+ MMU_DATA_DEF_RPERM_SUPER        	= 0x00000004;
+/**< Read Permission For Data Accesses in Supervisor Level */
+ MMU_DATA_DEF_WPERM_USER        	= 0x00000008;
+/**< Write Permission For Data Accesses in User Level */
+ MMU_DATA_DEF_RPERM_USER        	= 0x00000010;
+/**< Read Permission For Data Accesses in User Level */
+ MMU_DATA_CACHEABLE_REGION       	= 0x00000020;
+/**< Segment is Cacheable in the DCache and L2 Cache */
+ MMU_DATA_WRITETHROUGH_REGION    	= 0x00000040;
+/**< Segment is write-through */
+ MMU_DATA_NO_PREFETCH            	= 0x00000000; 
+/**< No prefetch on segment */
+ MMU_DATA_PREFETCH_ON_MISS       	= 0x00000080;
+/**< Prefetch after a cache miss on segment */
+ MMU_DATA_PREFETCH_ANY           	= 0x00000100;
+/**< Prefetch after a cache miss/hit on segment */
+ MMU_DATA_FLEX_SEGMENT_MODEL     	= 0x00000400;
+/**< Indicates that the segment uses Flexible Segment Model - should not be set 
+     manually in the linker file */ 
+
+/**************************************************************************//**
+ @Description   MMU Data Register C Bits
+ 
+                These bits are used for setting the attributes of 
+                Data MMU segments
+*//***************************************************************************/
+ MMU_DATA_COHERENT               	= 0x00010000;
+/**< Data Coherent Memory Segment */
+ MMU_DATA_PERIPHERAL             	= 0x00020000;
+/**< Data Peripheral Space */
+ MMU_DATA_GUARDED                	= 0x00040000;
+/**< Data Guarded Segment */
+ MMU_DATA_STACK_ENABLE           	= 0x00080000;
+/**< Stack Descriptor - Stack related accesses are permitted */
+
+
+ MMU_DATA_L2_PARTID_0				= 0x00000000;
+ MMU_DATA_L2_PARTID_1				= 0x00100000;
+ MMU_DATA_L2_PARTID_2				= 0x00200000;
+ MMU_DATA_L2_PARTID_3				= 0x00300000;
+
+
