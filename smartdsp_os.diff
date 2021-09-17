@@ -1,12 +1,11 @@
-diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
---- orig/drivers/cpri/cpri.c	2019-12-06 11:18:24.119657300 +0300
-+++ patched/drivers/cpri/cpri.c	2021-04-07 17:47:22.288357800 +0300
-@@ -2086,13 +2086,18 @@
-             }
+diff --git a/drivers/cpri/cpri.c b/drivers/cpri/cpri.c
+index e9b0e45..c58d696 100644
+--- a/drivers/cpri/cpri.c
++++ b/drivers/cpri/cpri.c
+@@ -2087,12 +2087,17 @@ static void cpriReconfigurationInterruptsClear(cpri_group_t cpri_group, cpri_cor
          }
      }
-- 
-+ 
+  
 +    /* Перывание OS_INT_CPRI_GEN_ERR мультиплексированное,
 +     * удаляется перед соданием в функции cpriInterruptsAssign 
 +     */
@@ -16,23 +15,20 @@ diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
      {
          status = osHwiDelete((os_hwi_handle)OS_INT_CPRI_GEN_ERR);
          OS_ASSERT_COND(status == OS_SUCCESS);
--    }
-+    }
+     }
 +    */
  }
  
  /* if "set" is TRUE, set the error events. Otherwise, disable the error events. */
-@@ -2133,7 +2138,8 @@
-     uint32_t                            active_units = 0;
+@@ -2134,6 +2139,7 @@ os_status cpriReconfigurationLevel0(cpri_t *cpri, const cpri_reconfiguration_lev
  #endif //DISABLE_ALL_ASSERTS
      uint8_t                             num_of_used_cpri_units_old[NUM_OF_CPRI_GROUPS] = { 0 };
--    cpri_num_t                          cpri_num;
-+    cpri_num_t                          cpri_num;
+     cpri_num_t                          cpri_num;
 +    os_status init_status;
   
      OS_ASSERT_COND(cpri_reconfiguration_level0_param != NULL);
   
-@@ -2222,6 +2228,10 @@
+@@ -2222,6 +2228,10 @@ os_status cpriReconfigurationLevel0(cpri_t *cpri, const cpri_reconfiguration_lev
                  hssiCpriDigitalLoopBackSet(cpri_num, FALSE);
                  WRITE_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[cpri_num].cpri_control.tcier, 0);
                  WRITE_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[cpri_num].cpri_control.rcier, 0);
@@ -43,7 +39,7 @@ diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
                  cpriUnitReconfigurationAfterDmaPendingRegistersClear(cpri_num);
              }
          }
-@@ -2251,7 +2262,7 @@
+@@ -2251,7 +2262,7 @@ os_status cpriReconfigurationLevel0(cpri_t *cpri, const cpri_reconfiguration_lev
   
      cpriReconfigurationInterruptsClear(cpri->group, (cpri_cores_t)cpri_reconfiguration_level0_group_info[cpri_reconfiguration_level0_current_group].cores_info.initializing_core, active_cpri_units_old[(uint8_t)cpri_reconfiguration_level0_current_group]);
  
@@ -52,7 +48,7 @@ diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
  
      // wait for all cores in this group before we signal the reconfiguration level0 for this group is done to allow a potential parallel reconfiguration level0 of another group to start
      osCentralBarrierWait(&cpri_reconfiguration_level0_group_info[(uint8_t)cpri_reconfiguration_level0_current_group].barrier);
-@@ -2274,7 +2285,8 @@
+@@ -2274,7 +2285,8 @@ os_status cpriReconfigurationLevel0(cpri_t *cpri, const cpri_reconfiguration_lev
      cpri->status &= (~CPRI_RECONFIGURATION_LEVEL_0);
      DBAR_IBSL();
   
@@ -62,23 +58,19 @@ diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
  }
  
  
-@@ -2866,7 +2878,9 @@
- 
+@@ -2867,6 +2879,8 @@ void cpriLinkRateAnCpriRegistersProgram(const cpri_init_params_t *unit_init_para
  void cpriFramerConfigRegisterProgram(const cpri_init_params_t *init_params)
  {
--    uint32_t    reg;
-+    uint32_t    reg;
+     uint32_t    reg;
 +    uint32_t *reg_offset_0x44;
 +    uint32_t x;
      OS_ASSERT_COND(init_params->cpri_num - CPRI_FIRST_USED_MODULE < NUM_OF_CPRI_MODULES);
      reg = CPRI_CONFIG_TX_ENABLE | CPRI_CONFIG_RX_ENABLE | CPRI_CONTROL_WORD_INSERTION_ENABLE;
      if (init_params->sync_mode == CPRI_END_POINT_MODE_SLAVE_MODE)
-@@ -2879,7 +2893,23 @@
- #ifdef CPRI_BLOCK_VER_4_2
+@@ -2880,6 +2894,22 @@ void cpriFramerConfigRegisterProgram(const cpri_init_params_t *init_params)
      reg |= init_params->reset_detection_length << 11;
  #endif //CPRI_BLOCK_VER_4_2
--    SET_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[init_params->cpri_num].cpri_framer.cpri_config, reg);
-+    SET_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[init_params->cpri_num].cpri_framer.cpri_config, reg);
+     SET_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[init_params->cpri_num].cpri_framer.cpri_config, reg);
 +    
 +    // Steps 7 - 10.
 +    reg_offset_0x44 = (uint32_t *)(DEVICE_REGISTERS->cpri.cpri_unit[init_params->cpri_num].cpri_framer.reserved0x44); //From erratta A-006540
@@ -98,43 +90,38 @@ diff -ruN orig/drivers/cpri/cpri.c patched/drivers/cpri/cpri.c
  }
  
  
-@@ -3029,7 +3059,10 @@
-     {
+@@ -3030,6 +3060,9 @@ void cpriIqDataCopyFromInitToInternal(const cpri_iq_init_params_t *init_params,
          cpri_iq->unicast_receive_transaction_size   = init_params->multicast_params->unicast_receive_transaction_size;
      }
-- 
-+ 
+  
 +    // zero number of active CPRI units before count
 +    cpri_iq->spinlock_init_value.num_of_active_cpri_units = 0;
 +    
      for (i = 0; i < NUM_OF_CPRI_GROUPS; i++)
      {
          cpri_iq->spinlock_init_value.num_of_active_cpri_units += num_of_used_cpri_units[i];
-diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
---- orig/drivers/cpri/cpri_init.c	2019-12-06 11:18:24.124643900 +0300
-+++ patched/drivers/cpri/cpri_init.c	2021-04-07 17:42:40.546387600 +0300
-@@ -61,7 +61,9 @@
- #ifdef CPRI_ETHERNET_ERRATA_A_007968
- #include <string.h>
+diff --git a/drivers/cpri/cpri_init.c b/drivers/cpri/cpri_init.c
+index 18243cf..f07786e 100644
+--- a/drivers/cpri/cpri_init.c
++++ b/drivers/cpri/cpri_init.c
+@@ -63,6 +63,8 @@
  #include "crc_.h"
--#endif //CPRI_ETHERNET_ERRATA_A_007968
-+#endif //CPRI_ETHERNET_ERRATA_A_007968
-+
-+#define CPRI_SYNC_ATTEMPS_MAX	128
+ #endif //CPRI_ETHERNET_ERRATA_A_007968
  
++#define CPRI_SYNC_ATTEMPS_MAX	128
++
  extern REGISTERS_TYPE       *DEVICE_REGISTERS;
  volatile uint32_t           active_cpri_units[NUM_OF_CPRI_GROUPS] __attribute__((section(".os_shared_data_cacheable_bss")));
-@@ -803,7 +805,8 @@
-     uint8_t                  total_num_of_used_cpri_units = 0;
+ static cpri_init_params_t   *units_init_params[NUM_OF_CPRI_GROUPS][NUM_OF_CPRI_MODULES] __attribute__((section(".os_shared_data_cacheable_bss")));
+@@ -804,6 +806,7 @@ os_status cpriInitialize (cpri_global_init_params_t *global_params, cpri_init_pa
  #if defined(CPRI_BLOCK_VER_4_2)
      uint32_t				 l1d_mode = osL1dGetResetMode();
--    uint8_t                  second_group_first_cpri_unit = hssiCpriSecondGroupFirstIndexGet();
-+    uint8_t                  second_group_first_cpri_unit = hssiCpriSecondGroupFirstIndexGet();
+     uint8_t                  second_group_first_cpri_unit = hssiCpriSecondGroupFirstIndexGet();
 +    os_status autoneg_status = OS_SUCCESS;
   
      /*in case l1 defense mode 1 return*/
      if (!g_cpri_registered && ((l1d_mode == OS_L1D_MODE_1) || (l1d_mode == OS_L1D_MODE_2)))
-@@ -933,29 +936,28 @@
+@@ -933,29 +936,28 @@ os_status cpriInitialize (cpri_global_init_params_t *global_params, cpri_init_pa
          }
   
          /*auto negotiation*/
@@ -144,9 +131,7 @@ diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
 -
 - 
 -        for (j = 0; j < NUM_OF_CPRI_GROUPS; ++j)
-+        autoneg_status = cpriLinkRateAutoNegotiate(units_init_params, link_rate, minimal_link_rate, sync_mode);
-+        if (autoneg_status == OS_SUCCESS)
-         {
+-        {
 -#if defined(CPRI_BLOCK_VER_4_1)
 -            if (link_rate[j] < global_params->minimal_accepted_link_rate)
 -#elif defined(CPRI_BLOCK_VER_4_2)
@@ -163,6 +148,9 @@ diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
 -        if (status != OS_SUCCESS)
 -            return OS_FAIL;
 - 
++        autoneg_status = cpriLinkRateAutoNegotiate(units_init_params, link_rate, minimal_link_rate, sync_mode);
++        if (autoneg_status == OS_SUCCESS)
++        {
 +			for (j = 0; j < NUM_OF_CPRI_GROUPS; ++j)
 +			{
 +	#if defined(CPRI_BLOCK_VER_4_1)
@@ -185,43 +173,38 @@ diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
          /* more per-unit configurations */
          for (g = 0; g < NUM_OF_CPRI_GROUPS; ++g)
          {
-@@ -1016,8 +1018,9 @@
-        }
+@@ -1017,7 +1019,8 @@ os_status cpriInitialize (cpri_global_init_params_t *global_params, cpri_init_pa
         osWaitForAllCores();
     }
--#endif //(CPRI_BLOCK_VER_4_2)
+ #endif //(CPRI_BLOCK_VER_4_2)
 -   return OS_SUCCESS;
-+#endif //(CPRI_BLOCK_VER_4_2)
 +   
 +   return autoneg_status;
  }
  
  os_status cpriIqInitialize (cpri_num_t cpri_num, cpri_iq_init_params_t *init_params, cpri_iq_additional_params_t *additional_init_params)
-@@ -1764,7 +1767,9 @@
-     os_status           reset_status;
+@@ -1765,6 +1768,8 @@ os_status cpriLinkRateAutoNegotiate(cpri_init_params_t *init_params[NUM_OF_CPRI_
      uint32_t            reg, i, j, count[NUM_OF_CPRI_GROUPS], g;
      cpri_init_params_t  *unit_init_params;
--    uint32_t            active_cpri_units_from_all_groups = 0;
-+    uint32_t            active_cpri_units_from_all_groups = 0;
+     uint32_t            active_cpri_units_from_all_groups = 0;
 +    int32_t             cpri_sync_attempt = 0;
 +    
  #ifdef CPRI_BLOCK_VER_4_2
      uint32_t            units_to_skip[NUM_OF_CPRI_GROUPS]; //odd units in dual-bandwidth don't go through Auto Negotiation.
  #endif //CPRI_BLOCK_VER_4_2
-@@ -1792,8 +1797,10 @@
+@@ -1792,8 +1797,10 @@ os_status cpriLinkRateAutoNegotiate(cpri_init_params_t *init_params[NUM_OF_CPRI_
      OS_ASSERT_COND((cpri_link_rate_t)hssiCpriMaxlLinkrateGet() >= link_rate[0]);
  #endif //CPRI_BLOCK_VER_4_1
   
 -    while (synchronized == CPRI_NOT_SYNCHONIZED)
--    {
 +    while (synchronized == CPRI_NOT_SYNCHONIZED && cpri_sync_attempt < CPRI_SYNC_ATTEMPS_MAX)
-+    {
+     {
 +        cpri_sync_attempt++;
 +        
          CLEAR_UINT32(CPRI_GENERAL_REGISTERS.ccr, active_cpri_units_from_all_groups);
          i = 0;
          reset_status = OS_FAIL;
-@@ -1882,7 +1889,7 @@
+@@ -1882,7 +1889,7 @@ os_status cpriLinkRateAutoNegotiate(cpri_init_params_t *init_params[NUM_OF_CPRI_
          }
   
          //synchronized = CPRI_NOT_SYNCHONIZED;
@@ -230,24 +213,22 @@ diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
          for (g = 0; g < NUM_OF_CPRI_GROUPS; ++g)
          {
              if (group_synchronized[g] == TRUE)
-@@ -1995,6 +2002,11 @@
-                 }
+@@ -1996,6 +2003,11 @@ os_status cpriLinkRateAutoNegotiate(cpri_init_params_t *init_params[NUM_OF_CPRI_
              }
          }
-+    }
+     }
 +    
 +    if(synchronized == CPRI_NOT_SYNCHONIZED)
 +    {
 +    	return OS_FAIL;
-     }
++    }
  
      for (g = 0; g < NUM_OF_CPRI_GROUPS; ++g)
-@@ -2801,7 +2813,16 @@
-                     case CPRI_INT_ERROR:
+     {
+@@ -2802,6 +2814,15 @@ os_status cpriInterruptsAssign(cpri_global_init_params_t *global_params, cpri_in
                          OS_ASSERT_COND(unit_init_params->iq_init_params != NULL);
                          if (unit_init_params->iq_init_params->initializing_core == (1<<osGetCoreID()))
--                        {
-+                        {
+                         {
 +                        	/* Удаление старого обработчика, если этого не делать, то происходит утечка памяти */
 +                        	bool is_created;
 +                        
@@ -260,22 +241,21 @@ diff -ruN orig/drivers/cpri/cpri_init.c patched/drivers/cpri/cpri_init.c
                              osHwiMultiplexedCreate((os_hwi_handle)(OS_INT_CPRI_GEN_ERR),
                                      (os_hwi_priority)unit_init_params->interrupts_table[j].interrupt_priority,
                                      LEVEL_MODE,
-@@ -4074,7 +4095,10 @@
- void cpriIqRxDisable(cpri_iq_t* cpri_iq)
+@@ -4075,6 +4096,9 @@ void cpriIqRxDisable(cpri_iq_t* cpri_iq)
  {
      register uint32_t    reg;
--    osSpinLockIrqGet(&cpri_guard);
-+    osSpinLockIrqGet(&cpri_guard);
+     osSpinLockIrqGet(&cpri_guard);
 +#if defined(CPRI_BLOCK_VER_4_2) //Errata: A-006463: Update to the description of register CPRInRCR - the errata is for both rev1 and rev2
 +    WRITE_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[cpri_iq->cpri_num].cpri_control.raccr, 0);
 +#endif //defined (CPRI_BLOCK_VER_4_2)  
      CLEAR_UINT32(DEVICE_REGISTERS->cpri.cpri_unit[cpri_iq->cpri_num].cpri_control.rcr, CPRI_IQ_ACTIVE);
      osSpinLockIrqRelease(&cpri_guard);
      DBAR_SCFG();
-diff -ruN orig/drivers/maple/rev3/maple_pusch.c patched/drivers/maple/rev3/maple_pusch.c
---- orig/drivers/maple/rev3/maple_pusch.c	2019-12-06 11:18:24.457740400 +0300
-+++ patched/drivers/maple/rev3/maple_pusch.c	2021-04-02 11:46:49.871597100 +0300
-@@ -658,8 +658,8 @@
+diff --git a/drivers/maple/rev3/maple_pusch.c b/drivers/maple/rev3/maple_pusch.c
+index cb2e39a..b25ab69 100644
+--- a/drivers/maple/rev3/maple_pusch.c
++++ b/drivers/maple/rev3/maple_pusch.c
+@@ -658,8 +658,8 @@ void maplePuschIsr(os_hwi_arg arg)
  	
  	    copChannelPeek(channel->cop_ch, &cop_job);
  	    /* If all jobs were already handled */
@@ -285,22 +265,21 @@ diff -ruN orig/drivers/maple/rev3/maple_pusch.c patched/drivers/maple/rev3/maple
 +	    { if (!(cop_job->device_specific)) osErrorDebug(); };
  	
  	    pusch_job = (maple_pusch_job_t *)cop_job->device_specific;
-	
-diff -ruN orig/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c patched/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c
---- orig/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c	2019-12-06 11:18:26.351146700 +0300
-+++ patched/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c	2020-02-19 17:15:25.985516600 +0300
-@@ -88,7 +88,9 @@
-         }
+ 	
+diff --git a/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c b/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c
+index 1d4fbfe..bb4f081 100644
+--- a/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c
++++ b/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c
+@@ -89,6 +89,8 @@ static inline void osVerifyChannelConsumerInitialized(os_ipc_channel_t *channel)
      }
  }
--
-+
+ 
 +#if 0
 +/* TODO: original code */
  static inline bool osIsChannelEmpty(os_ipc_channel_t *channel)
  {
      if (OS_HET_CH_EMPTY(&channel->local_channel))
-@@ -104,6 +106,24 @@
+@@ -104,6 +106,24 @@ static inline bool osIsChannelEmpty(os_ipc_channel_t *channel)
      }
      return 0;
  }
@@ -325,22 +304,19 @@ diff -ruN orig/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c patch
  
  os_het_status_t osIpcMessagePtrGet(void *ch, void **data)
  {
-@@ -252,7 +272,9 @@
-         }
+@@ -253,6 +273,8 @@ void osIpcMpicMsiMessageReceiveCb(os_hwi_arg msi_id)
      }
  }
--
-+
+ 
 +#if 0
 +// TODO: original
  void osIpcMessageReceiveCb(os_hwi_arg ch)
  {
      os_ipc_channel_t *channel = (os_ipc_channel_t*)ch;
-@@ -315,7 +337,82 @@
+@@ -315,7 +337,82 @@ void osIpcMessageReceiveCb(os_hwi_arg ch)
   
      osHwiSwiftEnable();
  }
--
 +#else
 +// TODO: retireve all messages in loop
 +void osIpcMessageReceiveCb(os_hwi_arg ch)
@@ -414,18 +390,16 @@ diff -ruN orig/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c patch
 +    osHwiSwiftEnable();
 +}
 +#endif
-+
+ 
 +#if 0
 +// TODO: original
  os_het_status_t osIpcChannelPeek(void* ch, void **data_pointer, uint32_t *data_length)
  {
      os_ipc_channel_t *channel = (os_ipc_channel_t*)ch;
-@@ -347,7 +445,46 @@
-     osHwiSwiftEnable();
+@@ -348,6 +446,45 @@ os_het_status_t osIpcChannelPeek(void* ch, void **data_pointer, uint32_t *data_l
      return OS_HETERO_SUCCESS;
   
--}
-+}
+ }
 +#else
 +os_het_status_t osIpcChannelPeek(void* ch, void **data_pointer, uint32_t *data_length)
 +{
@@ -468,15 +442,14 @@ diff -ruN orig/source/arch/starcore/b4860_family/heterogeneous/b486x_ipc.c patch
  
  os_het_status_t osIpcMessageChannelBufferReplace(void* ch)
  {
-diff -ruN orig/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c patched/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c
---- orig/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c	2019-12-06 11:18:27.937376600 +0300
-+++ patched/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c	2021-04-07 17:42:17.763230400 +0300
-@@ -872,7 +872,9 @@
-                     iterator = iterator->next;
+diff --git a/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c b/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c
+index bc2f368..09694af 100644
+--- a/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c
++++ b/source/arch/starcore/core_family/sc39XX/sc39xx_epic_init.c
+@@ -873,6 +873,8 @@ os_status osHwiMultiplexedDelete(os_hwi_handle     hwi_num,
                  iterator->next = this_int->next;
                  move_to_end(iterator, this_int);
--            }
-+            }
+             }
 +            
 +            osFree(this_int);
              break;
