@@ -8,6 +8,7 @@
 #include <lte_enodeb.h>
 #include <log.h>
 #include "liblte_msc8157.h"
+#include <log10_table.h>
 
 #if !defined DEBUG_TX_BUFFER_TEST && !defined DEBUG_OPT_OFF
 #pragma opt_level = "O3"
@@ -575,7 +576,8 @@ void liblte_generate_phich(lte_enodeb_t *enodeb, lte_subframe_t *sf, int16_t amp
 
 	memset(&d, 0, 24 * sizeof(int16_t));
 
-	gain_lin_QPSK = (int16_t) (((int32_t) amp * GAIN_SQRT_2) >> 15);
+	//gain_lin_QPSK = (int16_t) (((int32_t) amp * GAIN_SQRT_2) >> 15);
+	gain_lin_QPSK = scale_by_fapi_dB(GAIN_SQRT_2, amp);
 
 	// BPSK modulation of HI input (to be repeated 3 times, 36-212 Section 5.3.5, p. 56 in v8.6)
 	if (HI > 0)
